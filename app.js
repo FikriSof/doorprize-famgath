@@ -1108,6 +1108,37 @@ function init() {
     renderPrizeTabs();
     saveToLocalStorage();
   }
+  // ── Sidebar Toggles ──
+  function initSidebarToggles() {
+    function setupToggle(btnId, sidebarId, iconId, collapseIcon, expandIcon) {
+      const btn     = document.getElementById(btnId);
+      const sidebar = document.getElementById(sidebarId);
+      const iconEl  = document.getElementById(iconId);
+      if (!btn || !sidebar) return;
+
+      btn.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        iconEl.textContent = isCollapsed ? expandIcon : collapseIcon;
+
+        // Resize canvas after transition (300ms) so wheel fits new space
+        setTimeout(() => {
+          const wrapper = document.getElementById('wheel-wrapper');
+          if (!wrapper) return;
+          const size = Math.min(wrapper.offsetWidth, wrapper.offsetHeight, 500);
+          canvas.style.width  = size + 'px';
+          canvas.style.height = size + 'px';
+          drawWheel(getAvailableParticipants(), rotation);
+        }, 320);
+      });
+    }
+
+    // Left sidebar: collapse = arrow points right (▶), expand = arrow points left (◀)
+    setupToggle('toggle-left-sidebar', 'setup-panel',   'toggle-left-icon',  '◀', '▶');
+    // Right sidebar: collapse = arrow points left (◀), expand = arrow points right (▶)
+    setupToggle('toggle-right-sidebar', 'winners-panel', 'toggle-right-icon', '▶', '◀');
+  }
+
+  initSidebarToggles();
 }
 
 // Fire when DOM ready

@@ -44,7 +44,8 @@
   --border-gold:    rgba(245, 158, 11, 0.35);
 
   /* Layout */
-  --sidebar-width:  300px;
+  --sidebar-width:          300px;
+  --sidebar-collapsed-width: 48px;
   --radius-sm:      8px;
   --radius-md:      12px;
   --radius-lg:      20px;
@@ -126,6 +127,92 @@ body::before {
   height: 100vh;
   position: sticky;
   top: 0;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1),
+              min-width 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Collapsed state */
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+  min-width: var(--sidebar-collapsed-width);
+}
+
+/* Hide all content when collapsed, keep toggle btn visible */
+.sidebar.collapsed .sidebar-content,
+.sidebar.collapsed .sidebar-header > *:not(.sidebar-toggle-btn) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 12px 0;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+/* Toggle button */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 44px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  color: var(--violet-400);
+}
+
+.sidebar-left .sidebar-toggle-btn {
+  right: -22px;
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.sidebar-right .sidebar-toggle-btn {
+  left: -22px;
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+/* Collapsed icon in the strip */
+.sidebar-collapsed-icon {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 60px;
+  gap: 20px;
+  height: 100%;
+  width: 100%;
+}
+
+.sidebar.collapsed .sidebar-collapsed-icon {
+  display: flex;
+}
+
+.sidebar.collapsed .sidebar-header {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-content {
+  display: none;
 }
 
 .sidebar-left {
