@@ -10,6 +10,7 @@ const State = {
   prizes: [],         // [{ id, emoji, name, slots }]
   participants: [],   // ['Name1', 'Name2', ...]
   winners: {},        // { prizeId: ['Name1', ...] }
+  disqualified: [],   // ['Name1', ...] — gugur/tidak hadir
   activePrizeId: null,
   isSpinning: false,
   editingPrizeId: null,
@@ -201,14 +202,18 @@ function truncateText(text, maxWidth, ctx) {
 // ── Get Current Segments (non-winners or all) ──────────────
 function getAvailableParticipants() {
   const noRepeat = document.getElementById('setting-no-repeat').checked;
-  if (!noRepeat) return State.participants;
+
+  // Selalu kecualikan peserta gugur dari roda
+  const disqualifiedSet = new Set(State.disqualified);
+
+  if (!noRepeat) return State.participants.filter(p => !disqualifiedSet.has(p));
 
   // Kumpulkan SEMUA pemenang dari SEMUA hadiah ke dalam satu Set
   const allWinners = new Set();
   Object.values(State.winners).forEach(list => list.forEach(name => allWinners.add(name)));
 
-  // Saring peserta yang belum pernah menang hadiah apapun
-  return State.participants.filter(p => !allWinners.has(p));
+  // Saring: belum menang DAN belum gugur
+  return State.participants.filter(p => !allWinners.has(p) && !disqualifiedSet.has(p));
 }
 
 // ── Spin Logic ─────────────────────────────────────────────
@@ -657,21 +662,69 @@ function getInitials(name) {
 function removeWinner(prizeId, idx) {
   if (!State.winners[prizeId]) return;
   const name = State.winners[prizeId][idx];
+
+  // Hapus dari daftar pemenang
   State.winners[prizeId].splice(idx, 1);
+
+  // Masukkan ke daftar gugur (jika belum ada)
+  if (!State.disqualified.includes(name)) {
+    State.disqualified.push(name);
+  }
+
   saveToLocalStorage();
   renderWinners();
+  renderDisqualified();
   renderPrizeTabs();
   renderPrizesList();
   updateCurrentPrizeDisplay();
   updateSpinButton();
   updateStatusBar();
+  updateParticipantCount();
   drawWheel(getAvailableParticipants(), rotation);
-  showToast(`${name} dihapus dari daftar pemenang`, 'info');
+  showToast(`${name} dipindahkan ke daftar gugur`, 'warning');
+}
+
+// ── Restore Disqualified ──────────────────────────────
+function restoreDisqualified(name) {
+  State.disqualified = State.disqualified.filter(n => n !== name);
+  saveToLocalStorage();
+  renderDisqualified();
+  updateSpinButton();
+  updateStatusBar();
+  updateParticipantCount();
+  drawWheel(getAvailableParticipants(), rotation);
+  showToast(`${name} dikembalikan ke pool peserta`, 'success');
+}
+
+// ── Render: Disqualified List ──────────────────────────
+function renderDisqualified() {
+  const section = document.getElementById('disqualified-section');
+  const list    = document.getElementById('disqualified-list');
+  const badge   = document.getElementById('disqualified-count');
+  if (!section || !list) return;
+
+  const dq = State.disqualified;
+  badge.textContent = dq.length;
+  section.style.display = dq.length > 0 ? 'block' : 'none';
+
+  list.innerHTML = dq.map(name => `
+    <div class="disq-chip">
+      <span class="disq-icon">❌</span>
+      <span class="disq-name">${escapeHtml(name)}</span>
+      <button
+        class="btn-restore-disq"
+        onclick="restoreDisqualified('${escapeHtml(name)}')"
+        title="Kembalikan ke pool peserta"
+      >↺ Pulihkan</button>
+    </div>
+  `).join('');
 }
 
 // ── Render: Participant Count ───────────────────────────────
 function updateParticipantCount() {
-  document.getElementById('participant-count').textContent = State.participants.length;
+  const total  = State.participants.length;
+  const active = total - State.disqualified.filter(n => State.participants.includes(n)).length;
+  document.getElementById('participant-count').textContent = active;
 }
 
 // ── Set Active Prize ────────────────────────────────────────
@@ -817,12 +870,15 @@ async function resetAll() {
   const ok = await showConfirm('Reset semua pemenang? Data tidak bisa dikembalikan.', 'Reset Semua Pemenang');
   if (!ok) return;
   State.winners = {};
+  State.disqualified = [];
   renderWinners();
+  renderDisqualified();
   renderPrizeTabs();
   renderPrizesList();
   updateCurrentPrizeDisplay();
   updateSpinButton();
   updateStatusBar();
+  updateParticipantCount();
   drawWheel(getAvailableParticipants(), rotation);
   saveToLocalStorage();
   showToast('Semua pemenang direset', 'info');
@@ -889,9 +945,10 @@ function showConfirm(message, title = 'Konfirmasi') {
 function saveToLocalStorage() {
   try {
     localStorage.setItem('famgath-state', JSON.stringify({
-      prizes:       State.prizes,
-      participants: State.participants,
-      winners:      State.winners,
+      prizes:        State.prizes,
+      participants:  State.participants,
+      winners:       State.winners,
+      disqualified:  State.disqualified,
       activePrizeId: State.activePrizeId,
     }));
   } catch(e) {}
@@ -902,10 +959,11 @@ function loadFromLocalStorage() {
     const raw = localStorage.getItem('famgath-state');
     if (!raw) return;
     const saved = JSON.parse(raw);
-    if (saved.prizes)       State.prizes       = saved.prizes;
-    if (saved.participants) State.participants  = saved.participants;
-    if (saved.winners)      State.winners       = saved.winners;
-    if (saved.activePrizeId) State.activePrizeId = saved.activePrizeId;
+    if (saved.prizes)        State.prizes        = saved.prizes;
+    if (saved.participants)  State.participants   = saved.participants;
+    if (saved.winners)       State.winners        = saved.winners;
+    if (saved.disqualified)  State.disqualified   = saved.disqualified;
+    if (saved.activePrizeId) State.activePrizeId  = saved.activePrizeId;
 
     // Restore textarea
     document.getElementById('participants-textarea').value = State.participants.join('\n');
@@ -952,6 +1010,7 @@ function init() {
   renderPrizesList();
   renderPrizeTabs();
   renderWinners();
+  renderDisqualified();
   updateParticipantCount();
   updateCurrentPrizeDisplay();
   updateSpinButton();
