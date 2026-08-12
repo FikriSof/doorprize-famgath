@@ -1110,8 +1110,17 @@ function init() {
   }
   // ── Sidebar Toggles ──
   function initSidebarToggles() {
-    function setupToggle(btnId, sidebarId, iconId, collapseIcon, expandIcon) {
-      const btn     = document.getElementById(btnId);
+    const FULL_W      = 300;
+    const COLLAPSED_W = 48;
+
+    const btnLeft  = document.getElementById('toggle-left-sidebar');
+    const btnRight = document.getElementById('toggle-right-sidebar');
+
+    // Posisi awal tombol
+    if (btnLeft)  btnLeft.style.left   = FULL_W + 'px';
+    if (btnRight) btnRight.style.right = FULL_W + 'px';
+
+    function setupToggle(btn, sidebarId, iconId, collapseIcon, expandIcon, side) {
       const sidebar = document.getElementById(sidebarId);
       const iconEl  = document.getElementById(iconId);
       if (!btn || !sidebar) return;
@@ -1120,7 +1129,12 @@ function init() {
         const isCollapsed = sidebar.classList.toggle('collapsed');
         iconEl.textContent = isCollapsed ? expandIcon : collapseIcon;
 
-        // Resize canvas after transition (300ms) so wheel fits new space
+        // Geser tombol ikuti sidebar
+        const newPos = isCollapsed ? COLLAPSED_W : FULL_W;
+        if (side === 'left')  btn.style.left  = newPos + 'px';
+        if (side === 'right') btn.style.right = newPos + 'px';
+
+        // Resize canvas setelah animasi selesai
         setTimeout(() => {
           const wrapper = document.getElementById('wheel-wrapper');
           if (!wrapper) return;
@@ -1132,10 +1146,8 @@ function init() {
       });
     }
 
-    // Left sidebar: collapse = arrow points right (▶), expand = arrow points left (◀)
-    setupToggle('toggle-left-sidebar', 'setup-panel',   'toggle-left-icon',  '◀', '▶');
-    // Right sidebar: collapse = arrow points left (◀), expand = arrow points right (▶)
-    setupToggle('toggle-right-sidebar', 'winners-panel', 'toggle-right-icon', '▶', '◀');
+    setupToggle(btnLeft,  'setup-panel',   'toggle-left-icon',  '◀', '▶', 'left');
+    setupToggle(btnRight, 'winners-panel', 'toggle-right-icon', '▶', '◀', 'right');
   }
 
   initSidebarToggles();

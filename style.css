@@ -123,12 +123,13 @@ body::before {
   border-top: none;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   height: 100vh;
   position: sticky;
   top: 0;
   transition: width 0.3s cubic-bezier(0.4,0,0.2,1),
               min-width 0.3s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink: 0;
 }
 
 /* Collapsed state */
@@ -152,43 +153,42 @@ body::before {
   display: flex;
 }
 
-/* Toggle button */
+/* Toggle button — fixed overlay, always on top */
 .sidebar-toggle-btn {
-  position: absolute;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  width: 22px;
-  height: 44px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  width: 20px;
+  height: 56px;
+  background: var(--violet-700);
+  border: 1px solid var(--violet-500);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
+  color: white;
   font-size: 0.65rem;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-  z-index: 10;
-  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s, left 0.3s cubic-bezier(0.4,0,0.2,1), right 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index: 200;
+  box-shadow: 0 0 12px rgba(139,92,246,0.5);
+  line-height: 1;
 }
 
 .sidebar-toggle-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-hover);
-  color: var(--violet-400);
+  background: var(--violet-500);
+  box-shadow: 0 0 20px rgba(139,92,246,0.8);
 }
 
-.sidebar-left .sidebar-toggle-btn {
-  right: -22px;
+#toggle-left-sidebar {
+  left: var(--sidebar-width);
   border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: 0 6px 6px 0;
 }
 
-.sidebar-right .sidebar-toggle-btn {
-  left: -22px;
+#toggle-right-sidebar {
+  right: var(--sidebar-width);
   border-right: none;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-radius: 6px 0 0 6px;
 }
 
 /* Collapsed icon in the strip */

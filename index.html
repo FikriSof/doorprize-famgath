@@ -16,11 +16,6 @@
 <body>
   <!-- SIDEBAR: Setup Panel -->
   <aside id="setup-panel" class="sidebar sidebar-left">
-    <!-- Toggle button (visible on edge) -->
-    <button class="sidebar-toggle-btn" id="toggle-left-sidebar" title="Buka/tutup panel">
-      <span id="toggle-left-icon">◀</span>
-    </button>
-
     <!-- Collapsed strip icon -->
     <div class="sidebar-collapsed-icon" id="left-collapsed-icon">
       <span style="font-size:1.3rem;">🎁</span>
@@ -204,11 +199,6 @@
       <span style="font-size:1.1rem;">🎯</span>
     </div>
 
-    <!-- Toggle button (visible on edge) -->
-    <button class="sidebar-toggle-btn" id="toggle-right-sidebar" title="Buka/tutup panel">
-      <span id="toggle-right-icon">▶</span>
-    </button>
-
     <div class="sidebar-content" id="winners-content">
       <div class="empty-state" id="winners-empty">
         <div class="empty-icon">🎯</div>
@@ -307,6 +297,14 @@
 
   <!-- Toast Notification -->
   <div class="toast-container" id="toast-container"></div>
+
+  <!-- Sidebar toggle buttons (fixed, always visible) -->
+  <button class="sidebar-toggle-btn" id="toggle-left-sidebar" title="Buka/tutup panel kiri">
+    <span id="toggle-left-icon">◀</span>
+  </button>
+  <button class="sidebar-toggle-btn" id="toggle-right-sidebar" title="Buka/tutup panel kanan">
+    <span id="toggle-right-icon">▶</span>
+  </button>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="app.js"></script>
