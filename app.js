@@ -636,6 +636,11 @@ function renderWinners() {
               <span class="winner-rank">#${idx + 1}</span>
               <div class="winner-chip-avatar">${getInitials(name)}</div>
               <span class="winner-chip-name">${escapeHtml(name)}</span>
+              <button
+                class="btn-remove-winner"
+                onclick="removeWinner('${prize.id}', ${idx})"
+                title="Hapus dari daftar pemenang (tidak hadir / pulang duluan)"
+              >✕</button>
             </div>
           `).join('')}
         </div>
@@ -646,6 +651,22 @@ function renderWinners() {
 
 function getInitials(name) {
   return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+// ── Remove Individual Winner ────────────────────────────────
+function removeWinner(prizeId, idx) {
+  if (!State.winners[prizeId]) return;
+  const name = State.winners[prizeId][idx];
+  State.winners[prizeId].splice(idx, 1);
+  saveToLocalStorage();
+  renderWinners();
+  renderPrizeTabs();
+  renderPrizesList();
+  updateCurrentPrizeDisplay();
+  updateSpinButton();
+  updateStatusBar();
+  drawWheel(getAvailableParticipants(), rotation);
+  showToast(`${name} dihapus dari daftar pemenang`, 'info');
 }
 
 // ── Render: Participant Count ───────────────────────────────
