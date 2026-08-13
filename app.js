@@ -678,51 +678,36 @@ function renderPrizesList() {
 function renderPrizeTabs() {
   const container = document.getElementById('prize-tabs');
   if (State.prizes.length === 0) {
-    container.innerHTML = `<p style="font-size:0.8rem;color:var(--text-muted);">Belum ada hadiah</p>`;
+    container.innerHTML = '';
     return;
   }
 
-  // Urutan dari bawah ke atas (reverse), cari hadiah yang belum selesai
-  const reversed = [...State.prizes].reverse();
-
-  // Hadiah aktif saat ini
-  const activePrize = State.prizes.find(p => p.id === State.activePrizeId);
-
-  // Hadiah berikutnya (belum selesai & bukan yang aktif saat ini)
-  const nextPrize = reversed.find(p => {
+  // Urutan dari bawah ke atas, cari hadiah berikutnya yang belum selesai & bukan yang aktif
+  const nextPrize = [...State.prizes].reverse().find(p => {
     const wc = (State.winners[p.id] || []).length;
     return wc < p.slots && p.id !== State.activePrizeId;
   });
 
-  // Bangun list pill yang ditampilkan
-  const pillsToShow = [];
-  if (activePrize) pillsToShow.push({ prize: activePrize, isActive: true });
-  if (nextPrize)   pillsToShow.push({ prize: nextPrize,   isActive: false });
-
-  if (pillsToShow.length === 0) {
-    container.innerHTML = `<p style="font-size:0.8rem;color:var(--text-muted);">Semua hadiah selesai 🎉</p>`;
+  if (!nextPrize) {
+    // Semua hadiah selesai atau hanya ada 1 hadiah
+    container.innerHTML = '';
     return;
   }
 
-  container.innerHTML = pillsToShow.map(({ prize, isActive }) => {
-    const wonCount = (State.winners[prize.id] || []).length;
-    const isFull   = wonCount >= prize.slots;
-    const label    = isActive ? '' : '<span class="pill-next-label">BERIKUTNYA</span>';
-    return `
-      <div class="prize-tab-pill-wrap">
-        ${label}
-        <button class="prize-tab-pill ${isActive ? 'active' : 'next-prize'} ${isFull ? 'done' : ''}"
-                data-prize-id="${prize.id}">
-          ${prize.emoji} ${escapeHtml(prize.name)}
-          <span class="pill-slots">${wonCount}/${prize.slots}</span>
-        </button>
-      </div>
-    `;
-  }).join('');
+  const wonCount = (State.winners[nextPrize.id] || []).length;
+  container.innerHTML = `
+    <div class="prize-tab-pill-wrap">
+      <span class="pill-next-label">BERIKUTNYA</span>
+      <button class="prize-tab-pill next-prize"
+              data-prize-id="${nextPrize.id}">
+        ${nextPrize.emoji} ${escapeHtml(nextPrize.name)}
+        <span class="pill-slots">${wonCount}/${nextPrize.slots}</span>
+      </button>
+    </div>
+  `;
 
-  container.querySelectorAll('.prize-tab-pill').forEach(btn => {
-    btn.addEventListener('click', () => setActivePrize(btn.dataset.prizeId));
-  });
+  container.querySelector('.prize-tab-pill')
+    .addEventListener('click', () => setActivePrize(nextPrize.id));
 }
 
 function updatePrizeTabs() {
