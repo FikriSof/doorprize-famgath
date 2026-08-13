@@ -240,12 +240,28 @@
         <p class="winner-countdown-text" id="winner-countdown-text">Spin otomatis dalam 3...</p>
       </div>
 
+      <!-- Winners Summary (collapsible) -->
+      <div class="winner-summary-panel" id="winner-summary-panel" style="display:none;">
+        <div id="winner-summary-content"></div>
+      </div>
+
+      <!-- Action buttons -->
       <div class="winner-modal-actions">
         <button class="btn btn-primary btn-lg" id="btn-winner-next">
           Lanjut Sekarang ⏩
         </button>
         <button class="btn btn-danger btn-lg" id="btn-winner-stop" style="display:none;">
           🛑 Stop
+        </button>
+      </div>
+
+      <!-- Secondary actions -->
+      <div class="winner-modal-secondary">
+        <button class="btn-winner-secondary" id="btn-winner-next-prize" style="display:none;">
+          ➡️ <span id="btn-next-prize-label">Hadiah Berikutnya</span>
+        </button>
+        <button class="btn-winner-secondary" id="btn-winner-show-winners">
+          📋 Lihat Pemenang
         </button>
       </div>
     </div>

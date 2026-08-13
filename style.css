@@ -1219,6 +1219,98 @@ body::before {
   flex-wrap: wrap;
 }
 
+.winner-modal-secondary {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.btn-winner-secondary {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--violet-300);
+  border-radius: var(--radius-full);
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.btn-winner-secondary:hover {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: var(--violet-400);
+  color: var(--violet-400);
+}
+
+/* ── Winner Summary Panel (inside modal) ── */
+.winner-summary-panel {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  width: 100%;
+  text-align: left;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.ws-group {
+  margin-bottom: 10px;
+}
+
+.ws-group:last-child {
+  margin-bottom: 0;
+}
+
+.ws-group-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold-400);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ws-count {
+  font-size: 0.7rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--gold-400);
+  border-radius: var(--radius-full);
+  padding: 1px 6px;
+  margin-left: auto;
+}
+
+.ws-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.ws-rank {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 20px;
+}
+
+.ws-name {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
 /* ── Prize/General Modal ── */
 .modal-overlay {
   position: fixed;

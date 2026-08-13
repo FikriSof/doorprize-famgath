@@ -361,38 +361,48 @@ let autoSpinTimer = null;
 let autoSpinCountdown = null;
 
 function showWinnerModal(name, isLastSlot) {
-  const prize = State.prizes.find(p => p.id === State.activePrizeId);
-  const wonCount = (State.winners[State.activePrizeId] || []).length;
+  const pid    = State.activePrizeId;
+  const prize  = State.prizes.find(p => p.id === pid);
+  const wonCount = (State.winners[pid] || []).length;
 
   document.getElementById('winner-name-display').textContent = name;
-  document.getElementById('winner-prize-badge').textContent =
-    `${prize.emoji} ${prize.name}`;
+  document.getElementById('winner-prize-badge').textContent  = `${prize.emoji} ${prize.name}`;
 
-  // Update slot counter label
-  const slotLabel = document.getElementById('winner-slot-counter');
-  slotLabel.textContent = `Pemenang ke-${wonCount} dari ${prize.slots} slot`;
+  // Slot counter
+  document.getElementById('winner-slot-counter').textContent =
+    `Pemenang ke-${wonCount} dari ${prize.slots} slot`;
 
-  // Tampilkan/sembunyikan countdown berdasarkan apakah masih ada slot
   const countdownWrap = document.getElementById('winner-countdown-wrap');
   const countdownFill = document.getElementById('winner-countdown-fill');
   const countdownText = document.getElementById('winner-countdown-text');
-  const btnNext  = document.getElementById('btn-winner-next');
-  const btnStop  = document.getElementById('btn-winner-stop');
+  const btnNext       = document.getElementById('btn-winner-next');
+  const btnStop       = document.getElementById('btn-winner-stop');
+  const btnNextPrize  = document.getElementById('btn-winner-next-prize');
+  const nextPrizeLabel = document.getElementById('btn-next-prize-label');
+
+  // Cari hadiah berikutnya: urutan dari BAWAH ke ATAS (reverse array)
+  const nextPrize = [...State.prizes].reverse().find(p => {
+    const wc = (State.winners[p.id] || []).length;
+    return wc < p.slots && p.id !== pid;
+  });
+
+  // Reset summary panel
+  document.getElementById('winner-summary-panel').style.display = 'none';
 
   clearAutoSpinTimers();
 
   if (!isLastSlot) {
-    // Ada slot tersisa — aktifkan auto countdown
+    // Masih ada slot tersisa — auto countdown
     countdownWrap.style.display = 'block';
-    btnNext.textContent = 'Lanjut Sekarang ⏩';
-    btnStop.style.display = 'inline-flex';
+    btnNext.style.display       = 'inline-flex';
+    btnNext.textContent         = 'Lanjut Sekarang ⏩';
+    btnStop.style.display       = 'inline-flex';
+    btnNextPrize.style.display  = 'none';
 
     let secs = 3;
     countdownText.textContent = `Spin otomatis dalam ${secs}...`;
-
-    // Reset & restart CSS animation
     countdownFill.style.animation = 'none';
-    void countdownFill.offsetWidth; // reflow
+    void countdownFill.offsetWidth;
     countdownFill.style.animation = 'countdownBar 3s linear forwards';
 
     autoSpinCountdown = setInterval(() => {
@@ -401,17 +411,50 @@ function showWinnerModal(name, isLastSlot) {
         countdownText.textContent = `Spin otomatis dalam ${secs}...`;
       } else {
         clearAutoSpinTimers();
-        hideWinnerModal(true); // true = lanjut auto-spin
+        hideWinnerModal(true);
       }
     }, 1000);
   } else {
-    // Slot hadiah ini penuh — tampilkan tombol Selesai saja
+    // Slot hadiah ini penuh
     countdownWrap.style.display = 'none';
-    btnStop.style.display = 'none';
-    btnNext.textContent = 'Selesai ✓';
+    btnStop.style.display       = 'none';
+    btnNext.style.display       = 'inline-flex';
+    btnNext.textContent         = 'Selesai ✓';
+
+    // Tampilkan tombol Next Prize jika ada hadiah berikutnya
+    if (nextPrize) {
+      btnNextPrize.style.display = 'inline-flex';
+      nextPrizeLabel.textContent = `${nextPrize.emoji} ${nextPrize.name}`;
+    } else {
+      btnNextPrize.style.display = 'none';
+    }
   }
 
+  // Render winners summary (untuk tombol 📋)
+  renderWinnersSummaryInModal();
+
   document.getElementById('winner-overlay').classList.add('active');
+}
+
+function renderWinnersSummaryInModal() {
+  const container = document.getElementById('winner-summary-content');
+  if (!container) return;
+
+  // Tampilkan semua hadiah yang sudah ada pemenangnya
+  const html = State.prizes
+    .filter(p => (State.winners[p.id] || []).length > 0)
+    .map(p => {
+      const winners = State.winners[p.id] || [];
+      const rows = winners.map((n, i) =>
+        `<div class="ws-row"><span class="ws-rank">#${i+1}</span><span class="ws-name">${escapeHtml(n)}</span></div>`
+      ).join('');
+      return `<div class="ws-group">
+        <div class="ws-group-header">${p.emoji} ${escapeHtml(p.name)} <span class="ws-count">${winners.length}/${p.slots}</span></div>
+        ${rows}
+      </div>`;
+    }).join('');
+
+  container.innerHTML = html || '<p style="color:var(--text-muted);font-size:0.8rem;text-align:center;">Belum ada pemenang.</p>';
 }
 
 function clearAutoSpinTimers() {
@@ -1077,6 +1120,32 @@ function init() {
     updateSpinButton();
     drawWheel(getAvailableParticipants(), rotation);
     showToast('Auto-spin dihentikan', 'info');
+  });
+
+  // Next Prize button (bottom-to-top order)
+  document.getElementById('btn-winner-next-prize').addEventListener('click', () => {
+    const currentPid = State.activePrizeId;
+    // Cari hadiah berikutnya dari bawah ke atas
+    const nextPrize = [...State.prizes].reverse().find(p => {
+      const wc = (State.winners[p.id] || []).length;
+      return wc < p.slots && p.id !== currentPid;
+    });
+    if (!nextPrize) return;
+
+    hideWinnerModal(false);
+    setActivePrize(nextPrize.id);
+    showToast(`Pindah ke: ${nextPrize.emoji} ${nextPrize.name}`, 'info');
+    // Auto spin di hadiah baru
+    autoSpinTimer = setTimeout(() => spin(), 600);
+  });
+
+  // Show/hide winners summary toggle
+  document.getElementById('btn-winner-show-winners').addEventListener('click', () => {
+    const panel = document.getElementById('winner-summary-panel');
+    const btn   = document.getElementById('btn-winner-show-winners');
+    const isVisible = panel.style.display !== 'none';
+    panel.style.display = isVisible ? 'none' : 'block';
+    btn.textContent = isVisible ? '📋 Lihat Pemenang' : '🔼 Sembunyikan';
   });
 
   // Close winner overlay on backdrop click
