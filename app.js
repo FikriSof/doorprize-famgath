@@ -305,10 +305,23 @@ function cryptoRandom(max) {
 function onSpinComplete(winner) {
   State.isSpinning = false;
 
-  // Record winner
   const pid = State.activePrizeId;
+  const prize = State.prizes.find(p => p.id === pid);
   if (!State.winners[pid]) State.winners[pid] = [];
+  
+  // Tambahkan pemenang utama dari putaran roda
   State.winners[pid].push(winner);
+
+  // Fitur Cepat: Jika slot hadiah > 3, langsung isi sisa slot tanpa putaran roda tambahan
+  if (prize && prize.slots > 3) {
+    let available = getAvailableParticipants();
+    while (State.winners[pid].length < prize.slots && available.length > 0) {
+      const winnerIdx = cryptoRandom(available.length);
+      const instantWinner = available[winnerIdx];
+      State.winners[pid].push(instantWinner);
+      available.splice(winnerIdx, 1);
+    }
+  }
 
   saveToLocalStorage();
   playWinSound();
@@ -318,12 +331,11 @@ function onSpinComplete(winner) {
   updatePrizeTabs();
   drawWheel(getAvailableParticipants(), rotation);
 
-  // Cek apakah ini pemenang terakhir slot hadiah ini
-  const prize = State.prizes.find(p => p.id === pid);
   const wonCount = (State.winners[pid] || []).length;
   const isLastSlot = wonCount >= prize.slots;
 
-  showWinnerModal(winner, isLastSlot);
+  // Modifikasi teks di modal agar user tahu sisa pemenang ada di list
+  showWinnerModal(winner, isLastSlot, prize && prize.slots > 3);
 }
 
 // ── Confetti ────────────────────────────────────────────────
@@ -360,7 +372,7 @@ function fireConfetti() {
 let autoSpinTimer = null;
 let autoSpinCountdown = null;
 
-function showWinnerModal(name, isLastSlot) {
+function showWinnerModal(name, isLastSlot, fastFill = false) {
   const pid    = State.activePrizeId;
   const prize  = State.prizes.find(p => p.id === pid);
   const wonCount = (State.winners[pid] || []).length;
@@ -368,9 +380,22 @@ function showWinnerModal(name, isLastSlot) {
   document.getElementById('winner-name-display').textContent = name;
   document.getElementById('winner-prize-badge').textContent  = `${prize.emoji} ${prize.name}`;
 
-  // Slot counter
-  document.getElementById('winner-slot-counter').textContent =
-    `Pemenang ke-${wonCount} dari ${prize.slots} slot`;
+  // Slot counter & fast fill info
+  let counterText = `Pemenang ke-${wonCount} dari ${prize.slots} slot`;
+  if (fastFill) {
+    counterText = `Pemenang utama. ${prize.slots} slot telah terisi!`;
+    setTimeout(() => {
+      showToast('Sisa slot otomatis diundi untuk mempercepat waktu. Cek "Lihat Pemenang"!', 'info');
+      // Otomatis buka summary panel agar terlihat
+      const panel = document.getElementById('winner-summary-panel');
+      const btnShowWinners = document.getElementById('btn-winner-show-winners');
+      if (panel) {
+        panel.style.display = 'block';
+        btnShowWinners.textContent = '🔼 Sembunyikan';
+      }
+    }, 500);
+  }
+  document.getElementById('winner-slot-counter').textContent = counterText;
 
   const countdownWrap = document.getElementById('winner-countdown-wrap');
   const countdownFill = document.getElementById('winner-countdown-fill');
