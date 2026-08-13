@@ -377,8 +377,23 @@ function showWinnerModal(name, isLastSlot, fastFill = false) {
   const prize  = State.prizes.find(p => p.id === pid);
   const wonCount = (State.winners[pid] || []).length;
 
-  document.getElementById('winner-name-display').textContent = name;
+  const lbl1 = document.getElementById('winner-label');
+  const lbl2 = document.getElementById('winner-prize-label');
+  const nameDisplay = document.getElementById('winner-name-display');
+
+  if (fastFill) {
+    lbl1.style.display = 'none';
+    lbl2.style.display = 'none';
+    nameDisplay.style.display = 'none';
+  } else {
+    lbl1.style.display = 'block';
+    lbl2.style.display = 'block';
+    nameDisplay.style.display = 'block';
+    nameDisplay.textContent = name;
+  }
+
   document.getElementById('winner-prize-badge').textContent  = `${prize.emoji} ${prize.name}`;
+
 
   // Slot counter & fast fill info
   let counterText = `Pemenang ke-${wonCount} dari ${prize.slots} slot`;
