@@ -586,6 +586,41 @@ body::before {
   font-weight: 700;
 }
 
+.prize-tab-pill.done {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Wrapper untuk pill + label berikutnya */
+.prize-tab-pill-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pill-next-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Style khusus pill "berikutnya" */
+.prize-tab-pill.next-prize {
+  border-style: dashed;
+  border-color: rgba(139, 92, 246, 0.35);
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.prize-tab-pill.next-prize:hover {
+  opacity: 1;
+  border-color: var(--violet-500);
+  color: var(--text-primary);
+}
+
 /* Current Prize Display */
 .current-prize-display {
   display: flex;

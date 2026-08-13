@@ -681,17 +681,42 @@ function renderPrizeTabs() {
     container.innerHTML = `<p style="font-size:0.8rem;color:var(--text-muted);">Belum ada hadiah</p>`;
     return;
   }
-  container.innerHTML = State.prizes.map(prize => {
+
+  // Urutan dari bawah ke atas (reverse), cari hadiah yang belum selesai
+  const reversed = [...State.prizes].reverse();
+
+  // Hadiah aktif saat ini
+  const activePrize = State.prizes.find(p => p.id === State.activePrizeId);
+
+  // Hadiah berikutnya (belum selesai & bukan yang aktif saat ini)
+  const nextPrize = reversed.find(p => {
+    const wc = (State.winners[p.id] || []).length;
+    return wc < p.slots && p.id !== State.activePrizeId;
+  });
+
+  // Bangun list pill yang ditampilkan
+  const pillsToShow = [];
+  if (activePrize) pillsToShow.push({ prize: activePrize, isActive: true });
+  if (nextPrize)   pillsToShow.push({ prize: nextPrize,   isActive: false });
+
+  if (pillsToShow.length === 0) {
+    container.innerHTML = `<p style="font-size:0.8rem;color:var(--text-muted);">Semua hadiah selesai 🎉</p>`;
+    return;
+  }
+
+  container.innerHTML = pillsToShow.map(({ prize, isActive }) => {
     const wonCount = (State.winners[prize.id] || []).length;
-    const isActive = State.activePrizeId === prize.id;
     const isFull   = wonCount >= prize.slots;
+    const label    = isActive ? '' : '<span class="pill-next-label">BERIKUTNYA</span>';
     return `
-      <button class="prize-tab-pill ${isActive ? 'active' : ''} ${isFull ? 'done' : ''}"
-              data-prize-id="${prize.id}"
-              style="${isFull && !isActive ? 'opacity:0.6;' : ''}">
-        ${prize.emoji} ${escapeHtml(prize.name)}
-        <span class="pill-slots">${wonCount}/${prize.slots}</span>
-      </button>
+      <div class="prize-tab-pill-wrap">
+        ${label}
+        <button class="prize-tab-pill ${isActive ? 'active' : 'next-prize'} ${isFull ? 'done' : ''}"
+                data-prize-id="${prize.id}">
+          ${prize.emoji} ${escapeHtml(prize.name)}
+          <span class="pill-slots">${wonCount}/${prize.slots}</span>
+        </button>
+      </div>
     `;
   }).join('');
 
