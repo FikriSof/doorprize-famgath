@@ -645,12 +645,18 @@ function renderPrizesList() {
     </p>`;
     return;
   }
-  container.innerHTML = State.prizes.map(prize => {
+  
+  container.innerHTML = State.prizes.map((prize, idx) => {
     const wonCount = (State.winners[prize.id] || []).length;
     const isActive = State.activePrizeId === prize.id;
     const isFull   = wonCount >= prize.slots;
     return `
-      <div class="prize-item ${isActive ? 'active' : ''}" data-prize-id="${prize.id}" id="prize-item-${prize.id}">
+      <div class="prize-item ${isActive ? 'active' : ''}" 
+           data-prize-id="${prize.id}" 
+           data-index="${idx}"
+           id="prize-item-${prize.id}"
+           draggable="true">
+        <div class="prize-drag-handle" title="Tahan dan geser untuk mengurutkan">⠿</div>
         <div class="prize-item-emoji">${prize.emoji}</div>
         <div class="prize-item-info">
           <div class="prize-item-name">${escapeHtml(prize.name)}</div>
@@ -666,10 +672,57 @@ function renderPrizesList() {
     `;
   }).join('');
 
-  // Click to select active prize
+  // Drag and Drop Event Listeners
+  let draggedIdx = null;
+
   container.querySelectorAll('.prize-item').forEach(el => {
     el.addEventListener('click', () => {
       setActivePrize(el.dataset.prizeId);
+    });
+
+    el.addEventListener('dragstart', (e) => {
+      draggedIdx = parseInt(el.dataset.index);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', el.innerHTML);
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+
+    el.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      if (el.classList.contains('dragging')) return;
+      el.classList.add('drag-over');
+    });
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault(); // Necessary to allow dropping
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    el.addEventListener('dragleave', () => {
+      el.classList.remove('drag-over');
+    });
+
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('drag-over');
+      
+      const targetIdx = parseInt(el.dataset.index);
+      if (draggedIdx === null || draggedIdx === targetIdx) return;
+
+      // Reorder State.prizes array
+      const draggedPrize = State.prizes[draggedIdx];
+      State.prizes.splice(draggedIdx, 1);
+      State.prizes.splice(targetIdx, 0, draggedPrize);
+
+      saveToLocalStorage();
+      updatePrizeTabs();
+    });
+
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      container.querySelectorAll('.prize-item').forEach(item => item.classList.remove('drag-over'));
+      draggedIdx = null;
     });
   });
 }

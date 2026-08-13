@@ -337,6 +337,40 @@ body::before {
   box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
 }
 
+.prize-item[draggable="true"] {
+  user-select: none;
+}
+
+.prize-item.dragging {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.prize-item.drag-over {
+  border-color: var(--gold-400);
+  background: rgba(245, 158, 11, 0.1);
+  transform: scale(1.02);
+}
+
+.prize-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.prize-drag-handle:active {
+  cursor: grabbing;
+}
+
+.prize-item:hover .prize-drag-handle {
+  color: var(--text-secondary);
+}
+
 .prize-item-emoji {
   font-size: 1.4rem;
   flex-shrink: 0;
