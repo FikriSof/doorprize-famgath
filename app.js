@@ -386,8 +386,11 @@ function showWinnerModal(name, isLastSlot) {
     return wc < p.slots && p.id !== pid;
   });
 
-  // Reset summary panel
-  document.getElementById('winner-summary-panel').style.display = 'none';
+  // Reset summary panel + tombol ke kondisi awal
+  const summaryPanel = document.getElementById('winner-summary-panel');
+  const btnShowWinners = document.getElementById('btn-winner-show-winners');
+  summaryPanel.style.display  = 'none';
+  btnShowWinners.textContent  = '📋 Lihat Pemenang';
 
   clearAutoSpinTimers();
 
@@ -449,8 +452,16 @@ function renderWinnersSummaryInModal() {
     return;
   }
 
-  const rows = winners.map((n, i) =>
-    `<div class="ws-row"><span class="ws-rank">#${i+1}</span><span class="ws-name">${escapeHtml(n)}</span></div>`
+  const rows = winners.map((n, i) => `
+    <div class="ws-row">
+      <span class="ws-rank">#${i+1}</span>
+      <span class="ws-name">${escapeHtml(n)}</span>
+      <button
+        class="ws-delete-btn"
+        onclick="removeWinnerFromModal('${prize.id}', ${i})"
+        title="Hapus (tidak hadir)"
+      >✕</button>
+    </div>`
   ).join('');
 
   container.innerHTML = `
@@ -458,6 +469,42 @@ function renderWinnersSummaryInModal() {
       <div class="ws-group-header">${prize.emoji} ${escapeHtml(prize.name)} <span class="ws-count">${winners.length}/${prize.slots}</span></div>
       ${rows}
     </div>`;
+}
+
+// ── Remove Winner dari dalam modal popup ────────────────
+function removeWinnerFromModal(prizeId, idx) {
+  if (!State.winners[prizeId]) return;
+  const name = State.winners[prizeId][idx];
+
+  // Hapus dari pemenang & masukkan ke gugur
+  State.winners[prizeId].splice(idx, 1);
+  if (!State.disqualified.includes(name)) {
+    State.disqualified.push(name);
+  }
+
+  saveToLocalStorage();
+
+  // Update slot counter di modal
+  const prize    = State.prizes.find(p => p.id === prizeId);
+  const wonCount = (State.winners[prizeId] || []).length;
+  if (prize) {
+    document.getElementById('winner-slot-counter').textContent =
+      `Pemenang ke-${wonCount} dari ${prize.slots} slot`;
+  }
+
+  // Re-render summary dalam modal
+  renderWinnersSummaryInModal();
+
+  // Update sidebar winners list & wheel
+  renderWinners();
+  renderDisqualified();
+  renderPrizeTabs();
+  updateParticipantCount();
+  updateSpinButton();
+  updateStatusBar();
+  drawWheel(getAvailableParticipants(), rotation);
+
+  showToast(`${name} dipindahkan ke daftar gugur`, 'warning');
 }
 
 function clearAutoSpinTimers() {

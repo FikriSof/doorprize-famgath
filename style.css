@@ -1309,6 +1309,33 @@ body::before {
 .ws-name {
   font-size: 0.78rem;
   color: var(--text-primary);
+  flex: 1;
+}
+
+.ws-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.ws-row:hover .ws-delete-btn {
+  opacity: 1;
+}
+
+.ws-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 /* ── Prize/General Modal ── */
