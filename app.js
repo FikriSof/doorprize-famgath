@@ -392,6 +392,10 @@ function showWinnerModal(name, isLastSlot) {
   summaryPanel.style.display  = 'none';
   btnShowWinners.textContent  = '📋 Lihat Pemenang';
 
+  // Reset reroll mode
+  const btnNextEl = document.getElementById('btn-winner-next');
+  if (btnNextEl) btnNextEl.dataset.mode = '';
+
   clearAutoSpinTimers();
 
   if (!isLastSlot) {
@@ -495,7 +499,7 @@ function removeWinnerFromModal(prizeId, idx) {
   // Re-render summary dalam modal
   renderWinnersSummaryInModal();
 
-  // Update sidebar winners list & wheel
+  // Update sidebar & wheel
   renderWinners();
   renderDisqualified();
   renderPrizeTabs();
@@ -503,6 +507,22 @@ function removeWinnerFromModal(prizeId, idx) {
   updateSpinButton();
   updateStatusBar();
   drawWheel(getAvailableParticipants(), rotation);
+
+  // Cek apakah slot belum penuh & masih ada peserta → tawarkan Reroll
+  const slotsRemaining  = prize && wonCount < prize.slots;
+  const hasAvailable    = getAvailableParticipants().length > 0;
+  const btnNext         = document.getElementById('btn-winner-next');
+
+  if (slotsRemaining && hasAvailable) {
+    btnNext.textContent      = '🎲 Reroll';
+    btnNext.dataset.mode     = 'reroll';
+    btnNext.style.display    = 'inline-flex';
+  } else {
+    // Slot penuh atau tidak ada peserta tersisa
+    btnNext.textContent      = 'Selesai ✓';
+    btnNext.dataset.mode     = '';
+    btnNext.style.display    = 'inline-flex';
+  }
 
   showToast(`${name} dipindahkan ke daftar gugur`, 'warning');
 }
@@ -1155,8 +1175,21 @@ function init() {
 
   // Winner modal buttons
   document.getElementById('btn-winner-next').addEventListener('click', () => {
-    hideWinnerModal(false); // manual next (tidak auto-spin, tapi pindah hadiah jika perlu)
-    // Jika slot masih ada, tetap spin sekali lagi manual jika user klik next dari "last slot"
+    const btn  = document.getElementById('btn-winner-next');
+    const mode = btn.dataset.mode;
+
+    // Reset mode sebelum aksi
+    btn.dataset.mode = '';
+
+    if (mode === 'reroll') {
+      // Tutup modal lalu spin ulang
+      hideWinnerModal(false);
+      autoSpinTimer = setTimeout(() => spin(), 400);
+      return;
+    }
+
+    hideWinnerModal(false);
+    // Jika slot masih ada (normal auto-spin dari isLastSlot=false path)
     const pid      = State.activePrizeId;
     const prize    = State.prizes.find(p => p.id === pid);
     const wonCount = (State.winners[pid] || []).length;
