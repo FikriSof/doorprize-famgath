@@ -440,21 +440,24 @@ function renderWinnersSummaryInModal() {
   const container = document.getElementById('winner-summary-content');
   if (!container) return;
 
-  // Tampilkan semua hadiah yang sudah ada pemenangnya
-  const html = State.prizes
-    .filter(p => (State.winners[p.id] || []).length > 0)
-    .map(p => {
-      const winners = State.winners[p.id] || [];
-      const rows = winners.map((n, i) =>
-        `<div class="ws-row"><span class="ws-rank">#${i+1}</span><span class="ws-name">${escapeHtml(n)}</span></div>`
-      ).join('');
-      return `<div class="ws-group">
-        <div class="ws-group-header">${p.emoji} ${escapeHtml(p.name)} <span class="ws-count">${winners.length}/${p.slots}</span></div>
-        ${rows}
-      </div>`;
-    }).join('');
+  // Hanya tampilkan pemenang dari hadiah yang sedang aktif
+  const prize   = State.prizes.find(p => p.id === State.activePrizeId);
+  const winners = prize ? (State.winners[prize.id] || []) : [];
 
-  container.innerHTML = html || '<p style="color:var(--text-muted);font-size:0.8rem;text-align:center;">Belum ada pemenang.</p>';
+  if (!prize || winners.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;text-align:center;">Belum ada pemenang.</p>';
+    return;
+  }
+
+  const rows = winners.map((n, i) =>
+    `<div class="ws-row"><span class="ws-rank">#${i+1}</span><span class="ws-name">${escapeHtml(n)}</span></div>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="ws-group">
+      <div class="ws-group-header">${prize.emoji} ${escapeHtml(prize.name)} <span class="ws-count">${winners.length}/${prize.slots}</span></div>
+      ${rows}
+    </div>`;
 }
 
 function clearAutoSpinTimers() {
