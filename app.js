@@ -657,7 +657,13 @@ function updateSpinButton() {
 
   btn.disabled = false;
   const remaining = prize.slots - wonCount;
-  sub.textContent = `${available.length} peserta belum menang, sisa ${remaining} slot`;
+  const hidden = State.participants.length - available.length;
+  
+  if (hidden > 0) {
+    sub.textContent = `${available.length} peserta tersedia (${hidden} disembunyikan), sisa ${remaining} slot`;
+  } else {
+    sub.textContent = `${available.length} peserta belum menang, sisa ${remaining} slot`;
+  }
 }
 
 function updateStatusBar() {
@@ -673,7 +679,11 @@ function updateStatusBar() {
   const prize = State.prizes.find(p => p.id === State.activePrizeId);
   const available = getAvailableParticipants();
   const wonCount = (State.winners[State.activePrizeId] || []).length;
-  el.textContent = `🎁 ${prize.name} | ${available.length} peserta tersedia | Pemenang: ${wonCount}/${prize.slots}`;
+  
+  const hidden = State.participants.length - available.length;
+  const hiddenText = hidden > 0 ? ` (${hidden} disembunyikan)` : '';
+  
+  el.textContent = `🎁 ${prize.name} | ${available.length} peserta tersedia${hiddenText} | Pemenang: ${wonCount}/${prize.slots}`;
 }
 
 // ── Render: Prizes List (sidebar) ──────────────────────────
@@ -938,9 +948,8 @@ function renderDisqualified() {
 
 // ── Render: Participant Count ───────────────────────────────
 function updateParticipantCount() {
-  const total  = State.participants.length;
-  const active = total - State.disqualified.filter(n => State.participants.includes(n)).length;
-  document.getElementById('participant-count').textContent = active;
+  const total = State.participants.length;
+  document.getElementById('participant-count').textContent = total;
 }
 
 // ── Set Active Prize ────────────────────────────────────────
@@ -1034,13 +1043,25 @@ function loadParticipants() {
   }
 
   // Remove duplicates
-  State.participants = [...new Set(names)];
+  const uniqueNames = [...new Set(names)];
+  const duplicates = names.length - uniqueNames.length;
+  
+  State.participants = uniqueNames;
+  
+  // Update textarea to visually show the deduplicated list
+  document.getElementById('participants-textarea').value = uniqueNames.join('\n');
+  
   updateParticipantCount();
   updateSpinButton();
   updateStatusBar();
   drawWheel(getAvailableParticipants(), rotation);
   saveToLocalStorage();
-  showToast(`${State.participants.length} peserta dimuat!`, 'success');
+  
+  if (duplicates > 0) {
+    showToast(`${uniqueNames.length} peserta dimuat! (${duplicates} duplikat otomatis dihapus)`, 'success');
+  } else {
+    showToast(`${uniqueNames.length} peserta dimuat!`, 'success');
+  }
 }
 
 function handleFileUpload(e) {
